@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The National Green Book</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="caddie-app-frame">
+        
+        <!-- HEADER ROW: TAB CONTROLLER & SYMMETRIC MATCH SELECTORS -->
+        <header class="hud-top-bar">
+            <div class="tab-pill-box">
+                <button id="navCaddieTab" class="tab-btn active">🎯 Caddie HUD</button>
+                <button id="navBagTab" class="tab-btn">🎒 Locker Room</button>
+            </div>
+            
+            <div class="hole-main-selector">
+                <!-- Dynamically populated 1-18 holes from JS -->
+                <select id="currentHoleSelection" class="hole-pill"></select>
+                <!-- Dynamically populated 4 courses from JS -->
+                <select id="currentCourseSelection" class="course-sub-pill"></select>
+            </div>
+        </header>
+
+        <!-- VIEW ONE: LIVE CADDIE HUD MAP -->
+        <div id="caddieViewportView" class="view-panel active">
+            <main class="interactive-green-viewport">
+                <div class="integrated-wind-box">
+                    <div class="wind-visual-container">
+                        <div id="integratedWindArrow" class="radar-arrow"></div>
+                    </div>
+                    <div class="wind-controls-stack">
+                        <div class="speed-row">
+                            <input type="number" id="windSpeedVelocity" value="12" min="0">
+                            <select id="windUnitToggle">
+                                <option value="kmh">km/h</option>
+                                <option value="mph">mph</option>
+                            </select>
+                        </div>
+                        <select id="windDirectionSelect" class="wind-dropdown-menu">
+                            <option value="headwind">Into Us (Headwind)</option>
+                            <option value="tailwind">With Us (Tailwind)</option>
+                            <option value="right-to-left">Right to Left</option>
+                            <option value="left-to-right">Left to Right</option>
+                            <option value="diagonal-headwind-right">Diag Into (Right)</option>
+                            <option value="diagonal-headwind-left">Diag Into (Left)</option>
+                            <option value="diagonal-tailwind-right">Diag With (Right)</option>
+                            <option value="diagonal-tailwind-left">Diag With (Left)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <canvas id="greenBookCanvas" width="420" height="420"></canvas> 
+                <div class="map-toast-tip">Drag flag to adjust target location</div>
+            </main>
+
+            <!-- BOTTOM PANEL CONTROL TRAY -->
+            <footer class="input-control-tray">
+                <div class="tray-row-inputs">
+                    <div class="control-box">
+                        <label>Laser Distance</label>
+                        <input type="number" id="laserDistanceTarget" value="150">
+                    </div>
+                    <div class="control-box">
+                        <label>Shot Shape</label>
+                        <select id="tacticalShotShape">
+                            <option value="straight">Straight</option>
+                            <option value="fade">Fade</option>
+                            <option value="draw">Draw</option>
+                        </select>
+                    </div>
+                    <div class="control-box">
+                        <label>Pin Depth Guard</label>
+                        <select id="pinDepthLocation">
+                            <option value="middle">Middle Zone</option>
+                            <option value="front">Front Edge</option>
+                            <option value="back">Back Tucked</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="calculateBtn" class="btn-calculate">RUN CADDIE ENGINE</button>
+
+                <div class="caddie-decision-strip">
+                    <div class="decision-metric">
+                        <span class="sub">Plays Like</span>
+                        <span id="outputPlaysLikeDist" class="num">--m</span>
+                    </div>
+                    <div class="decision-recommendation">
+                        <span id="outputTargetClub" class="club-title">Select Club</span>
+                        <span id="outputExecutionNote" class="club-subtitle">Run calculation engine...</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- VIEW TWO: BAG MANAGER & WEDGE MATRIX LOGICAL DATABASE -->
+        <div id="bagViewportView" class="view-panel">
+            <div class="bag-manager-container">
+                
+                <div class="matrix-block-split">
+                    <h3 class="panel-heading">Yardage Book Inventory</h3>
+                    <p class="panel-sub">Manage standard club profiles below.</p>
+                    <div id="clubsInventoryContainer" class="clubs-list-scroll"></div>
+                </div>
+
+                <!-- Dynamic Wedge Clock Matrix Gapping Table -->
+                <div class="matrix-block-split">
+                    <h3 class="panel-heading">Wedge Clock Calibration</h3>
+                    <p class="panel-sub">Customize your lofts and precise clock positions.</p>
+                    <table class="wedge-matrix-table">
+                        <thead>
+                            <tr>
+                                <th>Loft</th>
+                                <th><input type="text" id="timeHead1" value="9:00 Swing" style="font-weight:700; color:var(--text-muted); text-align:center;"></th>
+                                <th><input type="text" id="timeHead2" value="10:30 Swing" style="font-weight:700; color:var(--text-muted); text-align:center;"></th>
+                                <th><input type="text" id="timeHead3" value="Full Carry" style="font-weight:700; color:var(--text-muted); text-align:center;"></th>
+                                <th style="width: 30px;">×</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wedgeMatrixInputsContainer">
+                            <!-- Dynamic Rows Injected via JavaScript -->
+                        </tbody>
+                    </table>
+
+                    <!-- Fast Custom Wedge Lofter Tray -->
+                    <div class="form-row-grid" style="margin-top: 6px; gap: 6px;">
+                        <input type="number" id="newWedgeLoft" placeholder="Loft (e.g., 58)" style="background:var(--card-bg); border:1px solid var(--border-color); border-radius:6px; color:#fff; padding:6px; font-size:0.8rem; text-align:center;">
+                        <button id="addNewWedgeRowBtn" class="btn-calculate" style="padding:4px 8px; font-size:0.75rem;">+ Add Wedge</button>
+                    </div>
+                </div>
+
+                <!-- Custom Pre-Set Quick Generator Asset Card -->
+                <div class="add-club-card">
+                    <h4>Quick Load Club Template</h4>
+                    <div class="form-row-grid">
+                        <select id="presetCategorySelect">
+                            <option value="irons">Irons</option>
+                            <option value="wedges">Wedges</option>
+                            <option value="woods">Woods</option>
+                            <option value="hybrids">Hybrids</option>
+                            <option value="driver">Drivers</option>
+                        </select>
+                        <select id="presetClubSelect"></select>
+                    </div>
+                    
+                    <div class="form-row-grid">
+                        <input type="number" id="newClubCarry" placeholder="Avg Carry (m)">
+                        <input type="number" id="newClubMissDist" placeholder="Miss Carry (m)">
+                    </div>
+                    <input type="text" id="newClubMissTrend" placeholder="Usual Miss (e.g., Short Right, Thin)">
+                    
+                    <button id="saveNewClubBtn" class="btn-calculate" style="padding: 8px; font-size:0.85rem;">+ Save to Bag Inventory</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="strategies.js"></script>
+    <script src="courses.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
