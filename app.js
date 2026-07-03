@@ -4,6 +4,109 @@
 // 💡 EDITING TIP: This block maps descriptions or styles to your courses and 
 // populates the preset quick-selection dropdown menu for your club locker.
 
+// ============================================================================
+// Starting the Firebase interface and UI selectors
+// ============================================================================
+const authScreen    = document.getElementById("auth-screen");
+const mainAppScreen = document.getElementById("main-app-screen");
+
+const emailInput    = document.getElementById("auth-email");
+const passwordInput = document.getElementById("auth-password");
+const loginBtn      = document.getElementById("btn-login");
+const signupBtn     = document.getElementById("btn-signup");
+const logoutBtn     = document.getElementById("logoutBtn");
+
+function showAppView() {
+    authScreen.style.display = "none";     // hides the login gate
+    mainAppScreen.style.display = "block"; // shows the main app
+}
+
+function showAuthView() {
+    authScreen.style.display = "block";    // shows the login gate
+    mainAppScreen.style.display = "none";  // hides the main app
+}
+
+// ============================================================================
+// Pull tools directly from the window manager your firebase.js created
+// ============================================================================
+const auth = window.firebaseAuth;
+const { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    onAuthStateChanged, 
+    signOut 
+} = window.fbHelpers;
+
+
+// ============================================================================
+// Sign up: creating a new player profile
+// ============================================================================
+signupBtn.addEventListener("click", () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        alert("Please enter both email and password to sign up.");
+        return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            alert("Player Profile was created Successfully! Welcome to the National Caddy App");
+        })
+        .catch((error) => {
+            alert(`Error during sign up: ${error.message}`);
+        });
+});
+
+// ============================================================================
+// Log in: Accessing an existing player profile
+// ============================================================================
+loginBtn.addEventListener('click', () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        alert('Please enter your email and password to log in.');
+        return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Player successfully signed in — the state monitor below will handle the rest!
+        })
+        .catch((error) => {
+            alert('Login failed: ' + error.message);
+        });
+});
+
+// ============================================================================
+// log out
+//===========================================================================
+
+logoutBtn.addEventListener('click', () => {
+    signOut(auth)
+        .then(() => {
+            alert('You have been logged out successfully.');
+        })
+        .catch((error) => {
+            alert('Error during logout: ' + error.message);
+        });
+});
+
+// ============================================================================
+// The Gatekeeper: To check if the golfer is logged in or out
+// ============================================================================
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("Player is logged in:", user.email);
+        showAppView();
+    } else {
+        showAuthView();
+    }
+});
+
 const courseGreenLayouts = {
     "gunnamatta": {
         color: "#27ae60", stroke: "#1e7e43", radiusX: 95, radiusY: 135,
