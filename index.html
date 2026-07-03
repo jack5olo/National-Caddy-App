@@ -12,11 +12,23 @@
             <h2 style="margin: 0; color: #fff; font-size: 1.2rem;">🔒 The National Green Book</h2>
         </header>
         <div style="padding: 30px 20px; display: flex; flex-direction: column; gap: 15px;">
-            <p style="text-align: center; color: #666; margin-top: 0;">Log in or create a player profile to unlock your yardages.</p>
+            <!-- Dynamic Title Hint -->
+            <p id="auth-mode-title" style="text-align: center; color: #333; font-weight: bold; margin-top: 0;">Log In to Your Profile</p>
+            
             <input type="email" id="auth-email" placeholder="Enter player email" style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;">
             <input type="password" id="auth-password" placeholder="Enter password" style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;">
-            <button id="btn-login" style="padding: 12px; border-radius: 8px; background: #007bff; color: white; border: none; font-weight: bold; font-size: 1rem; cursor: pointer;">Log In</button>
-            <button id="btn-signup" style="padding: 12px; border-radius: 8px; background: #28a745; color: white; border: none; font-weight: bold; font-size: 1rem; cursor: pointer;">Create Player Profile</button>
+            
+            <!-- Confirm password is hidden by default -->
+            <input type="password" id="auth-confirm-password" placeholder="Confirm Password" style="padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem; display: none;">
+            
+            <!-- One main dynamic action button -->
+            <button id="btn-main-action" style="padding: 12px; border-radius: 8px; background: #007bff; color: white; border: none; font-weight: bold; font-size: 1rem; cursor: pointer;">Log In</button>
+            
+            <!-- Mode Toggle Link -->
+            <p style="text-align: center; font-size: 0.9rem; margin: 5px 0 0 0; color: #666;">
+                <span id="auth-toggle-text">Don't have an account?</span> 
+                <a href="#" id="auth-toggle-link" style="color: #007bff; text-decoration: none; font-weight: bold;">Sign Up here</a>
+            </p>
         </div>
     </div>
 

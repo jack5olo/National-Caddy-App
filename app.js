@@ -1,34 +1,35 @@
 // ============================================================================
-// BLOCK 1: MASTER TEMPLATE DATABASE & SELECTION INITIALIZERS
+// 1. FIREBASE AUTHENTICATION INTERFACE SELECTORS
 // ============================================================================
-// 💡 EDITING TIP: This block maps descriptions or styles to your courses and 
-// populates the preset quick-selection dropdown menu for your club locker.
+const authScreen           = document.getElementById("auth-screen");
+const mainAppScreen        = document.getElementById("main-app-screen");
+
+const emailInput           = document.getElementById("auth-email");
+const passwordInput        = document.getElementById("auth-password");
+const confirmPasswordInput = document.getElementById("auth-confirm-password"); 
+const mainActionButton     = document.getElementById("btn-main-action");
+const logoutBtn            = document.getElementById("logoutBtn");
+
+const toggleText           = document.getElementById("auth-toggle-text");
+const toggleLink           = document.getElementById("auth-toggle-link");
+const modeTitle            = document.getElementById("auth-mode-title");
+
+let isSignupMode = false; // Tracks whether user is currently looking at Login or Signup view
 
 // ============================================================================
-// Starting the Firebase interface and UI selectors
+// 2. VIEW CONTROLLER FUNCTIONS
 // ============================================================================
-const authScreen    = document.getElementById("auth-screen");
-const mainAppScreen = document.getElementById("main-app-screen");
-
-const emailInput    = document.getElementById("auth-email");
-const passwordInput = document.getElementById("auth-password");
-const loginBtn      = document.getElementById("btn-login");
-const signupBtn     = document.getElementById("btn-signup");
-const logoutBtn     = document.getElementById("logoutBtn");
-
 function showAppView() {
-    authScreen.style.display = "none";     // hides the login gate
-    mainAppScreen.style.display = "block"; // shows the main app
+    authScreen.style.display = "none";     // Hides the login gateway
+    mainAppScreen.style.display = "block"; // Shows the main caddie engine
 }
 
 function showAuthView() {
-    authScreen.style.display = "block";    // shows the login gate
-    mainAppScreen.style.display = "none";  // hides the main app
+    authScreen.style.display = "block";    // Shows the login gateway
+    mainAppScreen.style.display = "none";  // Hides the main caddie engine
 }
 
-// ============================================================================
-// Pull tools directly from the window manager your firebase.js created
-// ============================================================================
+// Pull Firebase tools directly from the global window objects created in firebase.js
 const auth = window.firebaseAuth;
 const { 
     createUserWithEmailAndPassword, 
@@ -37,75 +38,125 @@ const {
     signOut 
 } = window.fbHelpers;
 
+// ============================================================================
+// 3. VISUAL THEME INTERFACE TOGGLE (Swaps between Login and Signup)
+// ============================================================================
+toggleLink.addEventListener("click", (e) => {
+    e.preventDefault(); // Prevents page jumping/reloading
+    isSignupMode = !isSignupMode; // Flip the state switch
+
+    if (isSignupMode) {
+        modeTitle.innerText = "Create a New Player Profile";
+        passwordInput.placeholder = "Create password (Min 8 characters)";
+        confirmPasswordInput.style.display = "block"; // Reveal password confirmation box
+        mainActionButton.innerText = "Create Player Profile";
+        mainActionButton.style.background = "#28a745"; // Success green for signup
+        toggleText.innerText = "Already have an account?";
+        toggleLink.innerText = "Log In here";
+    } else {
+        modeTitle.innerText = "Log In to Your Profile";
+        passwordInput.placeholder = "Enter password";
+        confirmPasswordInput.style.display = "none"; // Hide password confirmation box
+        mainActionButton.innerText = "Log In";
+        mainActionButton.style.background = "#007bff"; // Primary blue for login
+        toggleText.innerText = "Don't have an account?";
+        toggleLink.innerText = "Sign Up here";
+    }
+});
 
 // ============================================================================
-// Sign up: creating a new player profile
+// 4. MAIN ACTION EVENT HANDLER (Processes both Login and Signup requests)
 // ============================================================================
-signupBtn.addEventListener("click", () => {
+mainActionButton.addEventListener("click", () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
     if (!email || !password) {
-        alert("Please enter both email and password to sign up.");
+        alert("Please enter both an email and password to proceed.");
         return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            alert("Player Profile was created Successfully! Welcome to the National Caddy App");
-        })
-        .catch((error) => {
-            alert(`Error during sign up: ${error.message}`);
-        });
-});
+    if (isSignupMode) {
+        // --------------------------------------------------------------------
+        // SIGN UP MODE RUNTIME
+        // --------------------------------------------------------------------
+        const confirmPassword = confirmPasswordInput.value;
 
-// ============================================================================
-// Log in: Accessing an existing player profile
-// ============================================================================
-loginBtn.addEventListener('click', () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+        if (!confirmPassword) {
+            alert("Please confirm your password to complete registration.");
+            return;
+        }
+        if (password.length < 8) {
+            alert("Security requirement: Password must be at least 8 characters long.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            alert("⚠️ Passwords do not match! Please carefully re-type your entries.");
+            return;
+        }
 
-    if (!email || !password) {
-        alert('Please enter your email and password to log in.');
-        return;
+        createUserWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                alert("Player Profile was created Successfully! Welcome to the National Caddy App");
+            })
+            .catch((error) => {
+                // Intercept backend errors to provide distinct user notifications
+                if (error.code === "auth/email-already-in-use") {
+                    alert("❌ This email address is already registered. Click 'Log In here' below to sign in instead!");
+                } else if (error.code === "auth/invalid-email") {
+                    alert("❌ Please enter a valid email address format.");
+                } else {
+                    alert(`Error during registration: ${error.message}`);
+                }
+            });
+
+    } else {
+        // --------------------------------------------------------------------
+        // LOG IN MODE RUNTIME
+        // --------------------------------------------------------------------
+        signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+                // Successful sign in — background state monitor handles screen swapping
+            })
+            .catch((error) => {
+                if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+                    alert("❌ Incorrect email or password. Please verify and try again.");
+                } else {
+                    alert("Login failed: " + error.message);
+                }
+            });
     }
-
-    signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            // Player successfully signed in — the state monitor below will handle the rest!
-        })
-        .catch((error) => {
-            alert('Login failed: ' + error.message);
-        });
 });
 
 // ============================================================================
-// log out
-//===========================================================================
-
+// 5. SESSION DISCONNECT HANDLER (Log Out Button)
+// ============================================================================
 logoutBtn.addEventListener('click', () => {
     signOut(auth)
         .then(() => {
-            alert('You have been logged out successfully.');
+            alert("Logged out successfully. See you next round!");
         })
         .catch((error) => {
-            alert('Error during logout: ' + error.message);
+            alert("Error logging out: " + error.message);
         });
 });
 
 // ============================================================================
-// The Gatekeeper: To check if the golfer is logged in or out
+// 6. BACKEND LIFECYCLE GATEKEEPER (Monitors real-time login states)
 // ============================================================================
-
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log("Player is logged in:", user.email);
-        showAppView();
+        console.log("Player session verified:", user.email);
+        showAppView(); // Unlocks yardage tools
     } else {
-        showAuthView();
+        showAuthView(); // Enforces application lockdown
     }
 });
+
+// ============================================================================
+// CORE CADDIE ENGINE ENGINE CONTINUES BELOW...
+// (Paste your canvas setup, course metrics, and calculation code directly here)
+// ============================================================================
 
 const courseGreenLayouts = {
     "gunnamatta": {
