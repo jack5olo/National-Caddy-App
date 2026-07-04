@@ -211,10 +211,10 @@ const courseGreenLayouts = {
 
 const clubTemplateDatabase = {
     driver: ["Driver", "Mini Driver"],
-    woods: ["3-Wood", "5-Wood", "7-Wood"],
-    hybrids: ["2-Hybrid", "3-Hybrid", "4-Hybrid", "5-Hybrid"],
+    woods: ["3-Wood", "5-Wood", "7-Wood", "9-Wood"],
+    hybrids: ["2-Hybrid", "3-Hybrid", "4-Hybrid", "5-Hybrid", "6-Hybrid", "7-Hybrid", "8-Hybrid", "9-Hybrid"],
     irons: ["2-Iron", "3-Iron", "4-Iron", "5-Iron", "6-Iron", "7-Iron", "8-Iron", "9-Iron"],
-    wedges: ["Pitching Wedge", "Gap Wedge", "Sand Wedge", "Lob Wedge", "60 Degree", "56 Degree", "52 Degree"]
+    wedges: ["Pitching Wedge", "Gap Wedge", "Sand Wedge", "Lob Wedge", "60 Degree", "56 Degree", "52 Degree", "48 Degree"]
 };
 
 function initHeaderSelectors() {
@@ -267,7 +267,7 @@ function populateTemplateDropdown() {
 
 const customStartingPins = {
     "gunnamatta": {
-        1: { x: 210, y: 140 },
+        1: { x: 290, y: 240 },
         2: { x: 300, y: 210 },
         3: { x: 120, y: 210 }
     },
@@ -296,7 +296,8 @@ let userGolfProfile = {
     wedgeClock: [
         { loft: "60", slot1: 55, slot2: 70, slot3: 82 },
         { loft: "56", slot1: 70, slot2: 85, slot3: 98 },
-        { loft: "52", slot1: 85, slot2: 100, slot3: 112 }
+        { loft: "52", slot1: 85, slot2: 100, slot3: 112 },
+        { loft: "48", slot1: 100, slot2: 115, slot3: 128 }
     ]
 };
 
@@ -587,8 +588,8 @@ document.getElementById("saveNewClubBtn").addEventListener("click", () => {
         name: name, distance: carry, missDistance: missDist || Math.round(carry * 0.88), usualMiss: missTrend
     });
     renderBagInventoryList();
+    syncGolfProfileToCloud(); // <-- ADD THIS LINE HERE TO BACK IT UP TO FIRESTORE
 });
-
 document.getElementById("addNewWedgeRowBtn").addEventListener("click", () => {
     const loftInput = document.getElementById("newWedgeLoft");
     const loftVal = loftInput.value.trim();
@@ -596,6 +597,7 @@ document.getElementById("addNewWedgeRowBtn").addEventListener("click", () => {
     userGolfProfile.wedgeClock.push({ loft: loftVal, slot1: 0, slot2: 0, slot3: 0 });
     loftInput.value = "";
     bindWedgeMatrixInputs();
+    syncGolfProfileToCloud()
 });
 
 // View Toggle Tabs
