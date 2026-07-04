@@ -29,14 +29,19 @@ function showAuthView() {
     mainAppScreen.style.display = "none";  // Hides the main caddie engine
 }
 
-// Pull Firebase tools directly from the global window objects created in firebase.js
 const auth = window.firebaseAuth;
+const db = window.firebaseDb;
+
+// Extract the explicit helper methods out of the fbHelpers object
 const { 
-    createUserWithEmailAndPassword, 
+    doc, 
+    setDoc, 
+    getDoc, 
     signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
     onAuthStateChanged, 
     signOut 
-} = window.fbHelpers;
+} = window.fbHelpers;;
 
 // ============================================================================
 // 3. VISUAL THEME INTERFACE TOGGLE (Swaps between Login and Signup)
@@ -142,12 +147,35 @@ logoutBtn.addEventListener('click', () => {
 });
 
 // ============================================================================
-// 6. BACKEND LIFECYCLE GATEKEEPER (Monitors real-time login states)
+// BACKEND LIFECYCLE GATEKEEPER (Fetches player yardages upon successful login)
 // ============================================================================
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user) {
         console.log("Player session verified:", user.email);
+        
+        try {
+            // Check the cloud database for this specific user's file
+            const playerDocRef = doc(db, "players", user.uid);
+            const playerDocSnap = await window.fbHelpers.getDoc(playerDocRef);
+
+            if (playerDocSnap.exists()) {
+                console.log("📦 Found cloud yardages! Loading your locker room...");
+                // Overwrite local memory array with your real cloud data
+                userGolfProfile = playerDocSnap.data();
+            } else {
+                console.log("🆕 New player profile. Saving default base package...");
+                // If they don't have a profile yet, save the initial baseline profile
+                await setDoc(playerDocRef, userGolfProfile);
+            }
+        } catch (error) {
+            console.error("Failed to recover cloud configuration metrics:", error);
+        }
+
+        // Render everything onto the UI screens cleanly
+        renderBagInventoryList();
+        bindWedgeMatrixInputs();
         showAppView(); // Unlocks yardage tools
+        
     } else {
         showAuthView(); // Enforces application lockdown
     }
@@ -298,6 +326,7 @@ function renderBagInventoryList() {
 window.removeClubAsset = function(index) {
     userGolfProfile.bag.splice(index, 1);
     renderBagInventoryList();
+    syncGolfProfileToCloud();
 };
 
 function bindWedgeMatrixInputs() {
@@ -329,6 +358,9 @@ function bindWedgeMatrixInputs() {
 window.removeWedgeMatrixRow = function(index) {
     userGolfProfile.wedgeClock.splice(index, 1);
     bindWedgeMatrixInputs();
+    syncGolfProfileToCloud();
+    // Sync changes dynamically as you type out your yardage gaps
+    syncGolfProfileToCloud();
 };
 
 // ============================================================================
@@ -619,6 +651,28 @@ calculateBtn.addEventListener("click", () => {
     document.getElementById("outputTargetClub").textContent = suggestion.name;
     document.getElementById("outputExecutionNote").textContent = suggestion.notes;
 });
+
+// ============================================================================
+// CLOUD PERSISTENCE ENGINE (Syncs your bag data directly to Firestore)
+// ============================================================================
+async function syncGolfProfileToCloud() {
+    const user = auth.currentUser;
+    if (!user) {
+        console.warn("No authenticated golfer found. Data saved locally only.");
+        return;
+    }
+
+    try {
+        // Targets: players (Collection) -> [User-UID] (Document)
+        const playerDocRef = doc(db, "players", user.uid);
+        
+        // Pushes the exact userGolfProfile object up to Google's servers
+        await setDoc(playerDocRef, userGolfProfile, { merge: true });
+        console.log("⛳ Cloud Locker Room updated successfully for:", user.email);
+    } catch (error) {
+        console.error("Error saving profile metrics to cloud:", error);
+    }
+}
 
 // Boot up Application Runtime Sequences
 initHeaderSelectors();
